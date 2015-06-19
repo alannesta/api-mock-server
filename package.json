@@ -1,0 +1,12 @@
+{
+  "name": "express-api-server",
+  "version": "0.0.1",
+  "dependencies": {
+    "body-parser": "^1.13.1",
+    "express": "^4.12.4",
+    "multer": "^0.1.8"
+  },
+  "devDependencies": {
+    "connect-livereload": "^0.5.3"
+  }
+}

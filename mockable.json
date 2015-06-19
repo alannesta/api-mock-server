@@ -1,0 +1,108 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "users/current",
+      "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": {
+          "id": 0,
+          "username": "Bob",
+          "email": "bob.lee@email.org",
+          "firstName": "Bob",
+          "lastName": "Lee",
+          "invitationStatus": "accepted",
+          "pictureUrl": "http://lorempixel.com/48/48/",
+          "permissions": {
+            "role": "ADMIN"
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "agencies",
+      "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": {
+          "agencies": [
+            {
+              "id": 1,
+              "name": "Onboarding Agency",
+              "onBoardingStatus": "SIGNED_UP"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "agencies/1/accounts",
+      "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": [
+          {
+            "id": 1,
+            "name": "AcquisioOnBoarding"
+          }
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "agencies/1/permissions/modules",
+      "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": [
+          "ConnectorGoogleAnalytics",
+          "ReportScheduler",
+          "PivotTable",
+          "ConnectorAcquisioTracking",
+          "AccountOpenFields",
+          "BulkImportExport",
+          "ReportCenterV2"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "path": "accounts/1/clients/1/publishers",
+      "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": [
+          {
+            "id": 1,
+            "name": "AdWords Account",
+            "type": "MyAdWords",
+            "status": "Read/Write",
+            "childAccounts": [
+              {
+                "id": 1,
+                "name": "Account 1"
+              },
+              {
+                "id": 2,
+                "name": "Account 2"
+              },
+              {
+                "id": 3,
+                "name": "Account 3"
+              }
+            ],
+            "linkedChildAccounts": [
+              {
+                "id": 2,
+                "name": "Account 2"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
