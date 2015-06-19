@@ -1,10 +1,21 @@
 var http = require('http');
 var config = require('./config');
 
-exports.getFromMockable = function(url) {
-    http.get(url, function(res) {
+exports.getFromMockable = function(url, cb) {
+
+    var base = 'http://acquisio.mockable.io/';
+
+    http.get(base + url, function(res) {
+
+        var body = '';
+        res.setEncoding('utf8');
         res.on('data', function(chunk) {
-            console.log('BODY: ' + chunk);
+            //console.log(chunk);
+            body += chunk;  // a stream of binary data?
+        });
+
+        res.on('end', function() {
+            cb(body);
         });
     });
 };
