@@ -3,8 +3,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var postman = require('./postman');
+var appConfig = require('./config');
 
-var urlRoot = '/';
 var mocks = [];     // keep track of currently running mocks
 
 var testSenario = {
@@ -22,7 +22,6 @@ var testSenario = {
     }
 };
 
-
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(multer()); // for parsing multipart/form-data
@@ -39,7 +38,7 @@ function init() {
        //console.log(req.body);
         req.body.routes.forEach(function(mockConfig) {
             mocks.push(mockConfig);
-            app[mockConfig['method'].toLowerCase()](urlRoot + mockConfig['path'], function(req, res) {
+            app[mockConfig['method'].toLowerCase()]('/' + mockConfig['path'], function(req, res) {
                 var response = mockConfig['response'];
                 if (response.type === 'application/json' && response.status == 200) {
                     res.status(200).json(eval(response.value));
@@ -55,8 +54,14 @@ function init() {
      */
 
     app.post('/addSenario', function(req, res) {
-        console.log(req.body);
-        res.send('ok');
+        var mockConfig = req.body;
+        console.log(mockConfig['method'].toLowerCase());
+        app[mockConfig['method'].toLowerCase()]('/' + mockConfig['path'], function(req, res) {
+            var response = mockConfig['response'];
+            if (response.type === 'application/json' && response.status == 200) {
+                res.status(200).json(response.value);
+            }
+        });
     });
 
     //postman.getFromMockable('http://acquisio.mockable.io/user/standard');
