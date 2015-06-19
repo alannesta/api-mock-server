@@ -7,6 +7,21 @@ var postman = require('./postman');
 var urlRoot = '/';
 var mocks = [];     // keep track of currently running mocks
 
+var testSenario = {
+    "method": "GET",
+    "path": "agencies",
+    "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": {
+            "agencies": [
+                {"id": 1, "name": "Yellow Pages Group"},
+                {"id": 2, "name": "Acquisio"}
+            ]
+        }
+    }
+};
+
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -16,6 +31,10 @@ app.use(require('connect-livereload')({
 }));
 
 function init() {
+
+    /**
+     *  handle the senario request
+     */
     app.post('/init', function(req, res) {
        //console.log(req.body);
         req.body.routes.forEach(function(mockConfig) {
@@ -31,11 +50,23 @@ function init() {
 
     });
 
+    /**
+     *  handle the add senario request
+     */
+
+    app.post('/addSenario', function(req, res) {
+        console.log(req.body);
+        res.send('ok');
+    });
+
     //postman.getFromMockable('http://acquisio.mockable.io/user/standard');
 }
 
 var server = app.listen(3000, function () {
     init();
+
+    postman.addSenario(testSenario);
+
     var host = server.address().address;
     var port = server.address().port;
     console.log('app listening at http://%s:%s', host, port);

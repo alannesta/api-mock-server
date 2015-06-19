@@ -1,6 +1,7 @@
 var config = {
     dev: {
-        baseUrl: 'localhost:3000/'
+        host: 'localhost',
+        baseUrl: 'http://localhost:3000/'
     }
 };
 

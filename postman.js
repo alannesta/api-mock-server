@@ -16,9 +16,9 @@ exports.getFromMockable = function(url) {
 exports.addSenario = function(senario) {
 
     var options = {
-        hostname: config.dev.baseUrl,
+        hostname: config.dev.host,
         port: 3000,
-        path: 'addSenario',
+        path: '/addSenario',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -38,6 +38,6 @@ exports.addSenario = function(senario) {
         console.log('problem with request: ' + e.message);
     });
 
-    req.write(senario);
+    req.write(JSON.stringify(senario));
     req.end();
 };
