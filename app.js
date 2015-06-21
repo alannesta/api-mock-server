@@ -3,10 +3,10 @@ var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var postman = require('./postman');
-var appConfig = require('./config');
 var chalk = require('chalk');
+var MockSore = require('./mock_store');
 
-var mocks = [];     // keep track of currently running mocks
+var mocks = new MockSore();
 
 var testSenario = {
     "method": "GET",
@@ -41,14 +41,8 @@ function init() {
      *  handle initial senario request
      */
     app.post('/init', function(req, res) {
-        req.body.routes.forEach(function(mockConfig) {
-            mocks.push(mockConfig);
-            app[mockConfig['method'].toLowerCase()]('/' + mockConfig['path'], function(req, res) {
-                var response = mockConfig['response'];
-                if (response.type === 'application/json' && response.status == 200) {
-                    res.status(200).json(eval(response.value));
-                }
-            });
+        req.body.routes.forEach(function(senario) {
+            registerSenario(senario);
         });
         res.send('Senario Loaded');
 
@@ -59,18 +53,23 @@ function init() {
      */
 
     app.post('/addSenario', function(req, res) {
-        var mockConfig = req.body;
-        console.log(mockConfig['method'].toLowerCase());
-        app[mockConfig['method'].toLowerCase()]('/' + mockConfig['path'], function(req, res) {
-            var response = mockConfig['response'];
-            if (response.type === 'application/json' && response.status == 200) {
-                res.status(200).json(response.value);
-            }
-        });
+        var senario = req.body;
+        registerSenario(senario);
     });
 
 
 }
+
+function registerSenario(senario) {
+    app[senario['method'].toLowerCase()]('/' + senario['path'], function(req, res) {
+        var response = senario['response'];
+        if (response.type === 'application/json' && response.status == 200) {
+            res.status(200).json(response.value);
+        }
+    });
+    mocks.addMock(senario);
+}
+
 
 var server = app.listen(3000, function () {
     init();
@@ -78,21 +77,12 @@ var server = app.listen(3000, function () {
     //postman.addSenario(testSenario);
 
     postman.getFromMockable('user/standard', function(result) {
-        //console.log(response);
         var response = JSON.parse(result);
-        response.routes.forEach(function(mockConfig) {
-            mocks.push(mockConfig);
-            app[mockConfig['method'].toLowerCase()]('/' + mockConfig['path'], function(req, res) {
-                var response = mockConfig['response'];
-                if (response.type === 'application/json' && response.status == 200) {
-                    res.status(200).json(response.value);
-                }
-            });
+        response.routes.forEach(function(senario) {
+            registerSenario(senario);
         });
-        console.log('mocks ported successfully: ');
-        mocks.forEach(function(mock) {
-            console.log(chalk.green(mock.path));
-        });
+
+        mocks.listMock();
     });
 
     var host = server.address().address;

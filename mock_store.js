@@ -1,32 +1,30 @@
-var MockStore = function() {
+var MockStore = function () {
     var self = this;
-    var  _mock = [];
+    var _allmocks = [];
 
-    self.getAll = function() {
-        return _mock;
+    self.getAll = function () {
+        return _allmocks;
     };
 
     /**
      * Ad da mock, if there is duplicate, replace the old one
      */
-    self.addMock = function(mock) {
-        for (var i = 0, length = _mock.length; i < length; i++) {
-            if (_mock[i].path === mock.path && _mock[i].method === mock.method) {
-                _mock[i] = mock;
+    self.addMock = function (mock) {
+        for (var i = 0, length = _allmocks.length; i < length; i++) {
+            if (_allmocks[i].path === mock.path && _allmocks[i].method === mock.method) {
+                _allmocks[i] = mock;
                 return;
             }
         }
-
-        _mock.push(mock);
-
+        _allmocks.push(mock);
     };
 
-    self.listMock = function() {
-        _mock.forEach(function(mock) {
-            console.log('Mocks currently loaded: ');
+    self.listMock = function () {
+        console.log('Mocks currently loaded: ');
+        _allmocks.forEach(function (mock) {
             console.log(mock.method + ": " + mock.path);
         });
     }
 };
 
-module.exports = new MockStore();
+module.exports = MockStore;
