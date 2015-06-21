@@ -25,6 +25,16 @@ var MockStore = function () {
             console.log(mock.method + ": " + mock.path);
         });
     }
+
+    self.getMock = function (path) {
+        var result = [];
+        for (var i = 0, length = _allmocks.length; i < length; i++) {
+            if (_allmocks[i].path === path) {
+                result.push(_allmocks[i]);
+            }
+        }
+        return result;
+    };
 };
 
 module.exports = MockStore;

@@ -16,8 +16,7 @@ var testSenario = {
         "type": "application/json",
         "value": {
             "agencies": [
-                {"id": 1, "name": "Yellow Pages Group"},
-                {"id": 2, "name": "Acquisio"}
+                'empty'
             ]
         }
     }
@@ -55,6 +54,7 @@ function init() {
     app.post('/addSenario', function(req, res) {
         var senario = req.body;
         registerSenario(senario);
+        res.send('success');
     });
 
 
@@ -74,18 +74,17 @@ function registerSenario(senario) {
 var server = app.listen(3000, function () {
     init();
 
-    //postman.addSenario(testSenario);
+    postman.addSenario(testSenario, function() {
+        console.log('replace mock');
+    });
 
     postman.getFromMockable('user/standard', function(result) {
-        var response = JSON.parse(result);
-        response.routes.forEach(function(senario) {
+        var senarios = JSON.parse(result);
+        senarios.routes.forEach(function(senario) {
             registerSenario(senario);
         });
 
         mocks.listMock();
     });
 
-    var host = server.address().address;
-    var port = server.address().port;
-    console.log('app listening at http://%s:%s', host, port);
 });
