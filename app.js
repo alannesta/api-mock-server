@@ -34,7 +34,7 @@ app.use(require('connect-livereload')({
  * Init app routes
  *
  */
-function init() {
+function init(app) {
 
     /**
      *  handle initial senario request
@@ -57,7 +57,9 @@ function init() {
         res.send('success');
     });
 
-
+    app.get('/agencies', function(req, res) {
+        res.send('init agencies');
+    });
 }
 
 function registerSenario(senario) {
@@ -70,21 +72,50 @@ function registerSenario(senario) {
     mocks.addMock(senario);
 }
 
-
-var server = app.listen(3000, function () {
-    init();
-
-    postman.addSenario(testSenario, function() {
-        console.log('replace mock');
+function startServer(app) {
+    return app.listen(3000, function() {
+        init(app);
+        console.log('started');
+        //postman.getFromMockable('user/standard', function(result) {
+        //    var senarios = JSON.parse(result);
+        //    senarios.routes.forEach(function(senario) {
+        //        registerSenario(senario);
+        //    });
+        //
+        //    mocks.listMock();
+        //});
     });
+}
 
-    postman.getFromMockable('user/standard', function(result) {
-        var senarios = JSON.parse(result);
-        senarios.routes.forEach(function(senario) {
-            registerSenario(senario);
-        });
-
-        mocks.listMock();
+function restartServer(server, app) {
+    server.close();
+    server = null;
+    app = express();
+    app.get('/agencies', function(req, res) {
+        res.send('override agencies');
     });
+    return startServer(app);
+}
 
-});
+var server = startServer(app);
+server = restartServer(server, app);
+
+
+//var server = app.listen(3000, function () {
+//    init();
+//
+//    //postman.addSenario(testSenario, function() {
+//    //    console.log('replace mock');
+//    //});
+//
+//    postman.getFromMockable('user/standard', function(result) {
+//        var senarios = JSON.parse(result);
+//        senarios.routes.forEach(function(senario) {
+//            registerSenario(senario);
+//        });
+//
+//        mocks.listMock();
+//
+//    });
+//
+//});
