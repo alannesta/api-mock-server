@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var multer = require('multer');
 var postman = require('./postman');
 var MockSore = require('./mock_store');
+var Q = require('q');
 
 var mocks = new MockSore();
 
@@ -81,7 +82,6 @@ function init(app) {
 
     mocks.on('ADD_CONFLICT', function(path) {
         console.log('conflict detected ---> ' + path);
-        //server = restartServer(server, app);
         restartFlag = true;     // when there is a senario conflict, replace the old one, restart the server
     });
 
@@ -117,42 +117,77 @@ function restartServer(server, app) {
 // app main
 var server = startServer(app);
 
-async.series([function(callback) {
-    postman.getFromMockable('user/standard', function(result) {
-        var senarios = JSON.parse(result);
-        senarios.routes.forEach(function(senario) {
-            mocks.addMock(senario);
-        });
-        console.log('mockable stuff done');
-        callback(null, 'step1 done');
-    });
-}, function(callback) {
-    postman.addSenario(testSenario, function() {
-        console.log('add senario done');
-        callback(null, 'step2 done');
-    });
-}, function(callback) {
-    postman.addSenario(testSenario2, function() {
-        console.log('add senario done');
-        callback(null, 'step3 done');
-    });
-}], function(err, results) {
+
+/*
+* Async style
+*
+* */
+
+ //async.series([function(callback) {
+//    postman.getFromMockable('user/standard', function(result) {
+//        var senarios = JSON.parse(result);
+//        senarios.routes.forEach(function(senario) {
+//            mocks.addMock(senario);
+//        });
+//        console.log('mockable stuff done');
+//        callback(null, 'step1 done');
+//    });
+//}, function(callback) {
+//    postman.addSenario(testSenario, function() {
+//        console.log('add senario done');
+//        callback(null, 'step2 done');
+//    });
+//}, function(callback) {
+//    postman.addSenario(testSenario2, function() {
+//        console.log('add senario done');
+//        callback(null, 'step3 done');
+//    });
+//}], function(err, results) {
+//    if (restartFlag) {
+//        app = express();    // new instance of app is required to override the previously defined path...
+//        server = restartServer(server, app);
+//    }
+//});
+
+
+/*
+* Q style
+*
+* */
+
+//getFromMockable().then(replaceSenario).then(function() {
+//    if (restartFlag) {
+//        app = express();    // new instance of app is required to override the previously defined path...
+//        server = restartServer(server, app);
+//    }
+//});
+
+replaceSenario().then(getFromMockable).then(function() {
     if (restartFlag) {
         app = express();    // new instance of app is required to override the previously defined path...
         server = restartServer(server, app);
     }
 });
 
-//postman.addSenario(testSenario, function() {
-//    console.log('replace mock');
-//});
 
-//postman.getFromMockable('user/standard', function(result) {
-//    var senarios = JSON.parse(result);
-//    senarios.routes.forEach(function(senario) {
-//        mocks.addMock(senario);
-//    });
-//});
+function getFromMockable() {
+    var deferred = Q.defer();
+    postman.getFromMockable('user/standard', function(result) {
+        var senarios = JSON.parse(result);
+        senarios.routes.forEach(function(senario) {
+            mocks.addMock(senario);
+        });
+        console.log('mockable stuff done');
+        deferred.resolve();
+    });
+    return deferred.promise;
+}
 
-//var server = startServer(app);
-//server = restartServer(server, app);
+function replaceSenario() {
+    var deferred = Q.defer();
+    postman.addSenario(testSenario2, function() {
+        console.log('add senario done');
+        deferred.resolve();
+    });
+    return deferred.promise;
+}

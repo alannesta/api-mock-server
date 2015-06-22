@@ -29,6 +29,9 @@ var MockStore = function() {
     };
 
     self.listMock = function() {
+        if (_allmocks.length === 0) {
+            return;
+        }
         console.log('Mocks currently loaded: ');
         _allmocks.forEach(function(mock) {
             console.log(mock.method + ": " + mock.path, mock.response.value);
