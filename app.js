@@ -1,4 +1,5 @@
 var express = require('express');
+var async = require('async');
 var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer');
@@ -6,6 +7,8 @@ var postman = require('./postman');
 var MockSore = require('./mock_store');
 
 var mocks = new MockSore();
+
+var restartFlag = false;
 
 var testSenario = {
     "method": "GET",
@@ -16,6 +19,20 @@ var testSenario = {
         "value": {
             "agencies": [
                 'empty'
+            ]
+        }
+    }
+};
+
+var testSenario2 = {
+    "method": "GET",
+    "path": "agencies/2/accounts",
+    "response": {
+        "status": 200,
+        "type": "application/json",
+        "value": {
+            "agencies": [
+                'not empty'
             ]
         }
     }
@@ -43,7 +60,6 @@ function init(app) {
             registerSenario(senario);
         });
         res.send('Senario Loaded');
-
     });
 
     /**
@@ -56,16 +72,17 @@ function init(app) {
         res.send('success');
     });
 
-    app.get('/agencies', function(req, res) {
-        res.send('init agencies');
-    });
-
+    // bootstrap, register all senarios
     mocks.getAll().forEach(function(senario) {
         registerSenario(senario);
     });
 
+    mocks.listMock();
+
     mocks.on('ADD_CONFLICT', function(path) {
         console.log('conflict detected ---> ' + path);
+        //server = restartServer(server, app);
+        restartFlag = true;     // when there is a senario conflict, replace the old one, restart the server
     });
 
     mocks.on('NEW_MOCK_ADDED', function(senario) {
@@ -85,53 +102,57 @@ function registerSenario(senario) {
 
 function startServer(app) {
     return app.listen(3000, function() {
+        console.log('server started...');
         init(app);
-        console.log('started');
-        postman.getFromMockable('user/standard', function(result) {
-            var senarios = JSON.parse(result);
-            senarios.routes.forEach(function(senario) {
-                mocks.addMock(senario);
-            });
-
-            mocks.listMock();
-        });
     });
 }
+
+function restartServer(server, app) {
+    console.log('server restarting...')
+    server.close();
+    return startServer(app);
+}
+
+
+// app main
 var server = startServer(app);
 
-postman.addSenario(testSenario, function() {
-    console.log('replace mock');
+async.series([function(callback) {
+    postman.getFromMockable('user/standard', function(result) {
+        var senarios = JSON.parse(result);
+        senarios.routes.forEach(function(senario) {
+            mocks.addMock(senario);
+        });
+        console.log('mockable stuff done');
+        callback(null, 'step1 done');
+    });
+}, function(callback) {
+    postman.addSenario(testSenario, function() {
+        console.log('add senario done');
+        callback(null, 'step2 done');
+    });
+}, function(callback) {
+    postman.addSenario(testSenario2, function() {
+        console.log('add senario done');
+        callback(null, 'step3 done');
+    });
+}], function(err, results) {
+    if (restartFlag) {
+        app = express();    // new instance of app is required to override the previously defined path...
+        server = restartServer(server, app);
+    }
 });
 
-//
-//function restartServer(server, app) {
-//    server.close();
-//    server = null;
-//    app = express();
-//    app.get('/agencies', function(req, res) {
-//        res.send('override agencies');
-//    });
-//    return startServer(app);
-//}
-//
-//var server = startServer(app);
-//server = restartServer(server, app);
+//postman.addSenario(testSenario, function() {
+//    console.log('replace mock');
+//});
 
-
-//var server = app.listen(3000, function () {
-//    init(app);
-//
-//    postman.addSenario(testSenario, function() {
-//        console.log('replace mock');
-//    });
-//
-//    postman.getFromMockable('user/standard', function(result) {
-//        var senarios = JSON.parse(result);
-//        senarios.routes.forEach(function(senario) {
-//            registerSenario(senario);
-//        });
-//
-//        mocks.listMock();
-//
+//postman.getFromMockable('user/standard', function(result) {
+//    var senarios = JSON.parse(result);
+//    senarios.routes.forEach(function(senario) {
+//        mocks.addMock(senario);
 //    });
 //});
+
+//var server = startServer(app);
+//server = restartServer(server, app);
