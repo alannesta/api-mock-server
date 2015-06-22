@@ -1,3 +1,6 @@
+var Emitter = require('events').EventEmitter;
+var _ = require('underscore');
+
 var MockStore = function () {
     var self = this;
     var _allmocks = [];
@@ -13,10 +16,12 @@ var MockStore = function () {
         for (var i = 0, length = _allmocks.length; i < length; i++) {
             if (_allmocks[i].path === mock.path && _allmocks[i].method === mock.method) {
                 _allmocks[i] = mock;
+                self.emit('ADD_CONFLICT', mock.path);
                 return;
             }
         }
         _allmocks.push(mock);
+        self.emit('NEW_MOCK_ADDED', mock);
     };
 
     self.listMock = function () {
@@ -24,7 +29,7 @@ var MockStore = function () {
         _allmocks.forEach(function (mock) {
             console.log(mock.method + ": " + mock.path);
         });
-    }
+    };
 
     self.getMock = function (path) {
         var result = [];
@@ -36,5 +41,7 @@ var MockStore = function () {
         return result;
     };
 };
+
+MockStore.prototype = new Emitter();
 
 module.exports = MockStore;

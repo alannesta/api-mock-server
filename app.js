@@ -3,14 +3,13 @@ var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var postman = require('./postman');
-var chalk = require('chalk');
 var MockSore = require('./mock_store');
 
 var mocks = new MockSore();
 
 var testSenario = {
     "method": "GET",
-    "path": "agencies",
+    "path": "agencies/2/accounts",
     "response": {
         "status": 200,
         "type": "application/json",
@@ -23,7 +22,7 @@ var testSenario = {
 };
 
 app.use(bodyParser.json()); // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
 app.use(multer()); // for parsing multipart/form-data
 app.use(require('connect-livereload')({
     port: 35722
@@ -53,12 +52,25 @@ function init(app) {
 
     app.post('/addSenario', function(req, res) {
         var senario = req.body;
-        registerSenario(senario);
+        mocks.addMock(senario);
         res.send('success');
     });
 
     app.get('/agencies', function(req, res) {
         res.send('init agencies');
+    });
+
+    mocks.getAll().forEach(function(senario) {
+        registerSenario(senario);
+    });
+
+    mocks.on('ADD_CONFLICT', function(path) {
+        console.log('conflict detected ---> ' + path);
+    });
+
+    mocks.on('NEW_MOCK_ADDED', function(senario) {
+        //console.log('add ', senario);
+        registerSenario(senario);
     });
 }
 
@@ -69,44 +81,49 @@ function registerSenario(senario) {
             res.status(200).json(response.value);
         }
     });
-    mocks.addMock(senario);
 }
 
 function startServer(app) {
     return app.listen(3000, function() {
         init(app);
         console.log('started');
-        //postman.getFromMockable('user/standard', function(result) {
-        //    var senarios = JSON.parse(result);
-        //    senarios.routes.forEach(function(senario) {
-        //        registerSenario(senario);
-        //    });
-        //
-        //    mocks.listMock();
-        //});
+        postman.getFromMockable('user/standard', function(result) {
+            var senarios = JSON.parse(result);
+            senarios.routes.forEach(function(senario) {
+                mocks.addMock(senario);
+            });
+
+            mocks.listMock();
+        });
     });
 }
-
-function restartServer(server, app) {
-    server.close();
-    server = null;
-    app = express();
-    app.get('/agencies', function(req, res) {
-        res.send('override agencies');
-    });
-    return startServer(app);
-}
-
 var server = startServer(app);
-server = restartServer(server, app);
+
+postman.addSenario(testSenario, function() {
+    console.log('replace mock');
+});
+
+//
+//function restartServer(server, app) {
+//    server.close();
+//    server = null;
+//    app = express();
+//    app.get('/agencies', function(req, res) {
+//        res.send('override agencies');
+//    });
+//    return startServer(app);
+//}
+//
+//var server = startServer(app);
+//server = restartServer(server, app);
 
 
 //var server = app.listen(3000, function () {
-//    init();
+//    init(app);
 //
-//    //postman.addSenario(testSenario, function() {
-//    //    console.log('replace mock');
-//    //});
+//    postman.addSenario(testSenario, function() {
+//        console.log('replace mock');
+//    });
 //
 //    postman.getFromMockable('user/standard', function(result) {
 //        var senarios = JSON.parse(result);
@@ -117,5 +134,4 @@ server = restartServer(server, app);
 //        mocks.listMock();
 //
 //    });
-//
 //});
