@@ -19,7 +19,7 @@ var testSenario = {
         "type": "application/json",
         "value": {
             "agencies": [
-                'empty'
+                "empty"
             ]
         }
     }
@@ -33,7 +33,7 @@ var testSenario2 = {
         "type": "application/json",
         "value": {
             "agencies": [
-                'not empty'
+                "not empty"
             ]
         }
     }
@@ -78,6 +78,10 @@ function init(app) {
     mocks.on('ADD_CONFLICT', function(path) {
         console.log('conflict detected ---> ' + path);
         restartFlag = true;     // when there is a senario conflict, replace the old one, restart the server
+        if (restartFlag) {
+            app = express();    // new instance of app is required to override the previously defined path... make sure middleware is properly reloaded
+            server = restartServer(server, app);
+        }
     });
 
     mocks.on('NEW_MOCK_ADDED', function(senario) {
@@ -100,9 +104,9 @@ function loadMiddleware() {
     app.use(bodyParser.json()); // for parsing application/json
     app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
     app.use(multer()); // for parsing multipart/form-data
-    app.use(require('connect-livereload')({
-        port: 35722
-    }));
+    //app.use(require('connect-livereload')({
+    //    port: 35722
+    //}));
     app.use(express.static('public'));
 }
 
@@ -123,6 +127,7 @@ function restartServer(server, app) {
 // app main
 var server = startServer(app);
 
+getFromMockable();
 
 /*
 * Async style
@@ -168,12 +173,12 @@ var server = startServer(app);
 //    }
 //});
 
-replaceSenario().then(getFromMockable).then(function() {
-    if (restartFlag) {
-        app = express();    // new instance of app is required to override the previously defined path... is Middleware properly loaded?
-        server = restartServer(server, app);
-    }
-});
+//replaceSenario().then(getFromMockable).then(function() {
+//    if (restartFlag) {
+//        app = express();    // new instance of app is required to override the previously defined path... make sure middleware is properly reloaded
+//        server = restartServer(server, app);
+//    }
+//});
 
 
 function getFromMockable() {

@@ -5,9 +5,45 @@
     <title>Senario Manager</title>
     <script src="lib/jquery/dist/jquery.js"></script>
     <script src="scripts/site.js"></script>
-
 </head>
 <body>
     <h1>It works</h1>
+
+    <textarea id="senario" type="text" style="width:500px; height: 300px"></textarea>
+    <button onclick="addSenario()">Add Senario</button>
+
 </body>
+<script>
+    function addSenario() {
+        var senario;
+        try {
+            senario = JSON.parse($('#senario').val());
+        }catch(err) {
+            throw new Error('check the json format');
+        }
+
+//        $.post('/addSenario', senario, function(res) {
+//            console.log(res);
+//        });
+        console.log(senario);
+
+        $.ajax({
+            url: '/addSenario',
+            method: 'POST',
+            data: senario,
+            contentType: 'application/json',
+            success: function(res) {
+                console.log(res);
+            }
+        });
+
+//        app.post('/addSenario', function(req, res) {
+//            var senario = req.body;
+//            mocks.addMock(senario);
+//            res.send('success');
+//        });
+    }
+
+</script>
+
 </html>
