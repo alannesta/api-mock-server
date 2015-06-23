@@ -34,7 +34,7 @@ var MockStore = function() {
         }
         console.log('Mocks currently loaded: ');
         _allmocks.forEach(function(mock) {
-            console.log(mock.method + ": " + mock.path, mock.response.value);
+            console.log(mock.method + ": " + mock.path);
         });
     };
 

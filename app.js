@@ -39,19 +39,14 @@ var testSenario2 = {
     }
 };
 
-app.use(bodyParser.json()); // for parsing application/json
-app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
-app.use(multer()); // for parsing multipart/form-data
-app.use(require('connect-livereload')({
-    port: 35722
-}));
-
 
 /**
- * Init app routes
+ * Init app routes and load middlewares
  *
  */
 function init(app) {
+
+    loadMiddleware();
 
     /**
      *  handle initial senario request
@@ -98,6 +93,17 @@ function registerSenario(senario) {
             res.status(200).json(response.value);
         }
     });
+}
+
+
+function loadMiddleware() {
+    app.use(bodyParser.json()); // for parsing application/json
+    app.use(bodyParser.urlencoded({extended: true})); // for parsing application/x-www-form-urlencoded
+    app.use(multer()); // for parsing multipart/form-data
+    app.use(require('connect-livereload')({
+        port: 35722
+    }));
+    app.use(express.static('public'));
 }
 
 function startServer(app) {
@@ -164,7 +170,7 @@ var server = startServer(app);
 
 replaceSenario().then(getFromMockable).then(function() {
     if (restartFlag) {
-        app = express();    // new instance of app is required to override the previously defined path...
+        app = express();    // new instance of app is required to override the previously defined path... is Middleware properly loaded?
         server = restartServer(server, app);
     }
 });
