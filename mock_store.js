@@ -38,6 +38,7 @@ var MockStore = function() {
         });
     };
 
+    // need to rename this
     self.getMock = function(path) {
         var result = [];
         for (var i = 0, length = _allmocks.length; i < length; i++) {
