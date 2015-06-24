@@ -9,8 +9,6 @@ var Q = require('q');
 
 var mocks = new MockSore();
 
-var restartFlag = false;
-
 var testSenario = {
     "method": "GET",
     "path": "agencies/2/accounts",
@@ -44,7 +42,7 @@ var testSenario2 = {
  * Init app routes and load middlewares
  *
  */
-function init(app) {
+function init() {
 
     loadMiddleware();
 
@@ -77,11 +75,6 @@ function init(app) {
 
     mocks.on('ADD_CONFLICT', function(path) {
         console.log('conflict detected ---> ' + path);
-        restartFlag = true;     // when there is a senario conflict, replace the old one, restart the server
-        if (restartFlag) {
-            app = express();    // new instance of app is required to override the previously defined path... make sure middleware is properly reloaded
-            server = restartServer(server, app);
-        }
     });
 
     mocks.on('NEW_MOCK_ADDED', function(senario) {
@@ -91,8 +84,11 @@ function init(app) {
 }
 
 function registerSenario(senario) {
-    app[senario['method'].toLowerCase()]('/' + senario['path'], function(req, res) {
-        var response = senario['response'];
+
+    var index = mocks.findMockIndex(senario);
+
+    app[mocks.getAll()[index].method.toLowerCase()]('/' + mocks.getAll()[index].path, function(req, res) {
+        var response = mocks.getAll()[index].response;
         if (response.type === 'application/json' && response.status == 200) {
             res.status(200).json(response.value);
         }
@@ -110,22 +106,15 @@ function loadMiddleware() {
     app.use(express.static('public'));
 }
 
-function startServer(app) {
+function startServer() {
     return app.listen(3000, function() {
         console.log('server started...');
-        init(app);
+        init();
     });
 }
 
-function restartServer(server, app) {
-    console.log('server restarting...')
-    server.close();
-    return startServer(app);
-}
-
-
 // app main
-var server = startServer(app);
+var server = startServer();
 
 getFromMockable();
 
@@ -134,7 +123,7 @@ getFromMockable();
 *
 * */
 
- //async.series([function(callback) {
+// async.series([function(callback) {
 //    postman.getFromMockable('user/standard', function(result) {
 //        var senarios = JSON.parse(result);
 //        senarios.routes.forEach(function(senario) {
@@ -154,10 +143,7 @@ getFromMockable();
 //        callback(null, 'step3 done');
 //    });
 //}], function(err, results) {
-//    if (restartFlag) {
-//        app = express();    // new instance of app is required to override the previously defined path...
-//        server = restartServer(server, app);
-//    }
+//    console.log(results);
 //});
 
 
@@ -166,20 +152,7 @@ getFromMockable();
 *
 * */
 
-//getFromMockable().then(replaceSenario).then(function() {
-//    if (restartFlag) {
-//        app = express();    // new instance of app is required to override the previously defined path...
-//        server = restartServer(server, app);
-//    }
-//});
-
-//replaceSenario().then(getFromMockable).then(function() {
-//    if (restartFlag) {
-//        app = express();    // new instance of app is required to override the previously defined path... make sure middleware is properly reloaded
-//        server = restartServer(server, app);
-//    }
-//});
-
+//replaceSenario().then(getFromMockable);
 
 function getFromMockable() {
     var deferred = Q.defer();

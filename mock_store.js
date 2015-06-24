@@ -14,7 +14,7 @@ var MockStore = function() {
     };
 
     /**
-     * Ad da mock, if there is duplicate, replace the old one
+     * Add a mock, if there is duplicate, replace the old one
      */
     self.addMock = function(mock) {
         for (var i = 0, length = _allmocks.length; i < length; i++) {
@@ -38,8 +38,13 @@ var MockStore = function() {
         });
     };
 
-    // need to rename this
-    self.getMock = function(path) {
+    /**
+     *
+     * get all mocks under a specific path
+     * @param path
+     * @returns {Array}
+     */
+    self.getMockByPath = function(path) {
         var result = [];
         for (var i = 0, length = _allmocks.length; i < length; i++) {
             if (_allmocks[i].path === path) {
@@ -48,8 +53,22 @@ var MockStore = function() {
         }
         return result;
     };
+
+    /**
+     * return the index of the mock in _allmocks
+     *
+     * @param mock
+     */
+    self.findMockIndex = function(mock) {
+        for (var i = 0, length = _allmocks.length; i < length; i++) {
+            if (_allmocks[i].path === mock.path && _allmocks[i].method === mock.method) {
+                return i;
+            }
+        }
+        return -1;
+    };
 };
 
-MockStore.prototype = new Emitter();
+MockStore.prototype = new Emitter();    // inheritance...
 
 module.exports = MockStore;
