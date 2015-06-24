@@ -30,7 +30,7 @@
         $.ajax({
             url: '/addSenario',
             method: 'POST',
-            data: senario,
+            data: JSON.stringify(senario),      // must use JSON.stringify
             contentType: 'application/json',
             success: function(res) {
                 console.log(res);
